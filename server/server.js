@@ -8,6 +8,9 @@ const authRoutes = require("./routes/authRoutes");
 const profileRoutes = require("./routes/profileRoutes");
 const instagramRoutes = require("./routes/instagramRoutes");
 const campaignRoutes = require("./routes/campaignRoutes");
+const offerRoutes = require("./routes/offerRoutes");
+const executionRoutes = require("./routes/executionRoutes");
+const dashboardRoutes = require("./routes/dashboardRoutes");
 
 const app = express();
 
@@ -18,6 +21,9 @@ app.use("/api/auth", authRoutes);
 app.use("/api/profile", profileRoutes);
 app.use("/api/instagram", instagramRoutes);
 app.use("/api/campaigns", campaignRoutes);
+app.use("/api/offers", offerRoutes);
+app.use("/api/executions", executionRoutes);
+app.use("/api/dashboard", dashboardRoutes);
 
 app.get("/", (req, res) => {
   res.json({

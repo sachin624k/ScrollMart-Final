@@ -59,6 +59,11 @@ const campaignSchema = new mongoose.Schema(
       default: [],
     },
 
+    requiredHashtags: {
+      type: [String],
+      default: [],
+    },
+
     deadline: {
       type: Date,
       required: true,

@@ -186,9 +186,35 @@ const createBrandProfile = async (req, res) => {
   }
 };
 
+const getInfluencers = async (req, res) => {
+  try {
+    const influencers = await InfluencerProfile.find({
+      instagramConnected: true,
+      verificationStatus: "verified",
+    }).sort({
+      followers: -1,
+    });
+
+    res.status(200).json({
+      success: true,
+      count: influencers.length,
+      influencers,
+    });
+  } catch (error) {
+    console.error("Get influencers error:", error.message);
+
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch influencers",
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   createInfluencerProfile,
   createBrandProfile,
   getInfluencerProfile,
   getBrandProfile,
+  getInfluencers,
 };

@@ -7,6 +7,7 @@ const {
   createBrandProfile,
   getInfluencerProfile,
   getBrandProfile,
+  getInfluencers,
 } = require("../controllers/profileController");
 
 const router = express.Router();
@@ -18,5 +19,7 @@ router.post("/brand", protect, createBrandProfile);
 router.get("/influencer", protect, getInfluencerProfile);
 
 router.get("/brand", protect, getBrandProfile);
+
+router.get("/influencers", protect, getInfluencers);
 
 module.exports = router;
