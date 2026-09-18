@@ -3,6 +3,7 @@ const CampaignExecution = require("../models/CampaignExecution");
 const Offer = require("../models/Offer");
 const InfluencerProfile = require("../models/InfluencerProfile");
 const Campaign = require("../models/Campaign");
+const createNotification = require("../utils/notificationHelper");
 
 const createExecution = async (req, res) => {
   try {
@@ -302,6 +303,14 @@ const verifyExecution = async (req, res) => {
       campaign.status = "completed";
       await campaign.save();
 
+      await createNotification({
+        recipientId: influencer.userId,
+        type: "execution_verified",
+        title: "Post Verified",
+        message: "Your Instagram post has been verified successfully.",
+        relatedId: execution._id,
+      });
+
       return res.status(200).json({
         success: true,
         message: "Instagram post verified successfully",
@@ -319,6 +328,14 @@ const verifyExecution = async (req, res) => {
     execution.verificationStatus = "rejected";
 
     await execution.save();
+
+    await createNotification({
+      recipientId: influencer.userId,
+      type: "execution_rejected",
+      title: "Post Verification Failed",
+      message: "Your Instagram post could not be verified.",
+      relatedId: execution._id,
+    });
 
     res.status(400).json({
       success: false,

@@ -11,6 +11,9 @@ const campaignRoutes = require("./routes/campaignRoutes");
 const offerRoutes = require("./routes/offerRoutes");
 const executionRoutes = require("./routes/executionRoutes");
 const dashboardRoutes = require("./routes/dashboardRoutes");
+const notificationRoutes = require("./routes/notificationRoutes");
+const messageRoutes = require("./routes/messageRoutes");
+const adminRoutes = require("./routes/adminRoutes");
 
 const app = express();
 
@@ -24,6 +27,9 @@ app.use("/api/campaigns", campaignRoutes);
 app.use("/api/offers", offerRoutes);
 app.use("/api/executions", executionRoutes);
 app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/notifications", notificationRoutes);
+app.use("/api/messages", messageRoutes);
+app.use("/api/admin", adminRoutes);
 
 app.get("/", (req, res) => {
   res.json({

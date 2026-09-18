@@ -2,6 +2,7 @@ const Offer = require("../models/Offer");
 const Campaign = require("../models/Campaign");
 const InfluencerProfile = require("../models/InfluencerProfile");
 const CampaignExecution = require("../models/CampaignExecution");
+const createNotification = require("../utils/notificationHelper");
 
 const createOffer = async (req, res) => {
   try {
@@ -78,6 +79,14 @@ const createOffer = async (req, res) => {
       influencerId: influencer._id,
       amount,
       message: message || "",
+    });
+
+    await createNotification({
+      recipientId: influencer.userId,
+      type: "offer_received",
+      title: "New Offer Received",
+      message: `You received a new offer of ₹${amount} for the campaign.`,
+      relatedId: offer._id,
     });
 
     res.status(201).json({
@@ -206,6 +215,25 @@ const updateOfferStatus = async (req, res) => {
     offer.respondedAt = new Date();
 
     await offer.save();
+
+    const notificationType =
+      status === "accepted" ? "offer_accepted" : "offer_rejected";
+
+    const notificationTitle =
+      status === "accepted" ? "Offer Accepted" : "Offer Rejected";
+
+    const notificationMessage =
+      status === "accepted"
+        ? "The influencer has accepted your offer."
+        : "The influencer has rejected your offer.";
+
+    await createNotification({
+      recipientId: offer.brandId,
+      type: notificationType,
+      title: notificationTitle,
+      message: notificationMessage,
+      relatedId: offer._id,
+    });
 
     res.status(200).json({
       success: true,
@@ -345,6 +373,15 @@ const releasePayout = async (req, res) => {
       });
     }
 
+    const influencer = await InfluencerProfile.findById(offer.influencerId);
+
+    if (!influencer) {
+      return res.status(404).json({
+        success: false,
+        message: "Influencer profile not found",
+      });
+    }
+
     // Campaign must be completed
     if (execution.executionStatus !== "completed") {
       return res.status(400).json({
@@ -365,6 +402,14 @@ const releasePayout = async (req, res) => {
     offer.paymentStatus = "released";
 
     await offer.save();
+
+    await createNotification({
+      recipientId: influencer.userId,
+      type: "payout_released",
+      title: "Payout Released",
+      message: `Your payout of ₹${offer.amount} has been released.`,
+      relatedId: offer._id,
+    });
 
     return res.status(200).json({
       success: true,
