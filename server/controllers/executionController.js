@@ -3,6 +3,7 @@ const CampaignExecution = require("../models/CampaignExecution");
 const Offer = require("../models/Offer");
 const InfluencerProfile = require("../models/InfluencerProfile");
 const Campaign = require("../models/Campaign");
+const InstagramAccount = require("../models/InstagramAccount");
 const createNotification = require("../utils/notificationHelper");
 
 const createExecution = async (req, res) => {
@@ -145,7 +146,13 @@ const submitExecution = async (req, res) => {
     }
 
     // Only in-progress campaigns can be submitted
-    if (execution.executionStatus !== "in_progress") {
+    if (
+      execution.executionStatus !== "in_progress" &&
+      !(
+        execution.executionStatus === "submitted" &&
+        execution.verificationStatus === "rejected"
+      )
+    ) {
       return res.status(400).json({
         success: false,
         message: "Campaign is not currently in progress",
@@ -236,13 +243,24 @@ const verifyExecution = async (req, res) => {
       });
     }
 
-    // Get Instagram access token
-    const accessToken = process.env.META_ACCESS_TOKEN;
+    // Get the Instagram account connected to this influencer
+    const instagramAccount = await InstagramAccount.findOne({
+      influencerId: influencer._id,
+    });
+
+    if (!instagramAccount || !instagramAccount.connected) {
+      return res.status(400).json({
+        success: false,
+        message: "Instagram account is not connected",
+      });
+    }
+
+    const accessToken = instagramAccount.accessToken;
 
     if (!accessToken) {
-      return res.status(500).json({
+      return res.status(400).json({
         success: false,
-        message: "Instagram access token is not configured",
+        message: "Instagram access token is missing",
       });
     }
 
@@ -257,8 +275,23 @@ const verifyExecution = async (req, res) => {
     const media = response.data.data || [];
 
     // Find submitted post by permalink
+    // Normalize Instagram URLs
+    const normalizeInstagramUrl = (url) => {
+      if (!url) return "";
+
+      try {
+        const parsedUrl = new URL(url);
+        return `${parsedUrl.origin}${parsedUrl.pathname}`.replace(/\/$/, "");
+      } catch {
+        return url.split("?")[0].replace(/\/$/, "");
+      }
+    };
+
+    // Find submitted post by permalink
     const submittedPost = media.find(
-      (post) => post.permalink === execution.instagramPostUrl,
+      (post) =>
+        normalizeInstagramUrl(post.permalink) ===
+        normalizeInstagramUrl(execution.instagramPostUrl),
     );
 
     if (!submittedPost) {
@@ -410,13 +443,24 @@ const trackPerformance = async (req, res) => {
       });
     }
 
-    // Get Instagram access token
-    const accessToken = process.env.META_ACCESS_TOKEN;
+    // Get the Instagram account connected to this influencer
+    const instagramAccount = await InstagramAccount.findOne({
+      influencerId: execution.influencerId,
+    });
+
+    if (!instagramAccount || !instagramAccount.connected) {
+      return res.status(400).json({
+        success: false,
+        message: "Instagram account is not connected",
+      });
+    }
+
+    const accessToken = instagramAccount.accessToken;
 
     if (!accessToken) {
-      return res.status(500).json({
+      return res.status(400).json({
         success: false,
-        message: "Instagram access token is not configured",
+        message: "Instagram access token is missing",
       });
     }
 
@@ -432,8 +476,21 @@ const trackPerformance = async (req, res) => {
     const media = response.data.data || [];
 
     // Find the verified post
+    const normalizeInstagramUrl = (url) => {
+      if (!url) return "";
+
+      try {
+        const parsedUrl = new URL(url);
+        return `${parsedUrl.origin}${parsedUrl.pathname}`.replace(/\/$/, "");
+      } catch {
+        return url.split("?")[0].replace(/\/$/, "");
+      }
+    };
+
     const submittedPost = media.find(
-      (post) => post.permalink === execution.instagramPostUrl,
+      (post) =>
+        normalizeInstagramUrl(post.permalink) ===
+        normalizeInstagramUrl(execution.instagramPostUrl),
     );
 
     if (!submittedPost) {

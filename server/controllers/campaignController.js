@@ -23,7 +23,6 @@ const createCampaign = async (req, res) => {
       deliverables,
       requiredHashtags,
       deadline,
-      status,
     } = req.body;
 
     // Basic validation
@@ -49,7 +48,7 @@ const createCampaign = async (req, res) => {
       deliverables,
       requiredHashtags,
       deadline,
-      status: status || "draft",
+      status: "draft",
     });
 
     res.status(201).json({
@@ -63,6 +62,64 @@ const createCampaign = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Failed to create campaign",
+      error: error.message,
+    });
+  }
+};
+
+const updateCampaignStatus = async (req, res) => {
+  try {
+    // Only brands can update campaign status
+    if (req.user.role !== "brand") {
+      return res.status(403).json({
+        success: false,
+        message: "Only brands can update campaign status",
+      });
+    }
+
+    const { campaignId } = req.params;
+    const { status } = req.body;
+
+    // Validate status
+    if (!["draft", "active", "completed", "cancelled"].includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid campaign status",
+      });
+    }
+
+    const campaign = await Campaign.findById(campaignId);
+
+    if (!campaign) {
+      return res.status(404).json({
+        success: false,
+        message: "Campaign not found",
+      });
+    }
+
+    // Make sure campaign belongs to logged-in brand
+    if (campaign.brandId.toString() !== req.user.userId) {
+      return res.status(403).json({
+        success: false,
+        message: "You are not allowed to update this campaign",
+      });
+    }
+
+    campaign.status = status;
+
+    await campaign.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Campaign status updated successfully",
+      campaign,
+    });
+  } catch (error) {
+    console.error("Update campaign status error:", error.message);
+
+    res.status(500).json({
+      success: false,
+      message: "Failed to update campaign status",
       error: error.message,
     });
   }
@@ -264,4 +321,5 @@ module.exports = {
   createCampaign,
   getCampaigns,
   getCampaignMatches,
+  updateCampaignStatus,
 };

@@ -1,1 +1,21 @@
-IGAAU9yTyWN7tBZAGFxb0tVOHRlRllWTm9LYkQ5SFRTZA244RDJoeGEzQ0RHZADBZARlJzX3dBbnRGYmN1VE9vcVg5blA2My1jZAV8zMkpjYUNYNzBVV1RmRVhRYWlGNGVZASkdONEg4TmpZAWExFQmFQcDRYNFBBNUVUcmVFMzc3SjNROAZDZD
+# macOS
+.DS_Store
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Build
+dist/
+.next/
+
+# Logs
+logs/
+*.log

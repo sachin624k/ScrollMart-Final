@@ -1,6 +1,7 @@
 const bcrypt = require("bcryptjs");
 const User = require("../models/User");
 const jwt = require("jsonwebtoken");
+const InfluencerProfile = require("../models/InfluencerProfile");
 
 const registerUser = async (req, res) => {
   try {
@@ -42,6 +43,13 @@ const registerUser = async (req, res) => {
       passwordHash,
       role,
     });
+
+    // Create influencer profile
+    if (role === "influencer") {
+      await InfluencerProfile.create({
+        userId: user._id,
+      });
+    }
 
     res.status(201).json({
       success: true,
